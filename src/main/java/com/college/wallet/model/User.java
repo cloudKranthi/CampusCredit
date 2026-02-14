@@ -1,5 +1,6 @@
 package com.college.wallet.model;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -9,7 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
+import  jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -25,7 +26,7 @@ public class User {
     @Id//ids are necessary for entity
    @GeneratedValue(strategy=GenerationType.IDENTITY)//ids are iterated 
    @Column(unique=true)
-   private Long  id;
+   private UUID  id;
    @NotBlank(message="Enter username")
    @Column(unique=true,nullable=false)
     private String  username;
