@@ -1,0 +1,17 @@
+spring:
+  application:
+    name:  demo
+  datasource:
+    url: jdbc:postgresql://localhost:5432/campus_credit_db
+    username:  postgres
+    password:  Shiva@37
+  jpa:
+    show-sql:  true
+    hibernate:
+      ddl-auto:  update
+app:
+  jwt:
+    # Uses the ENV variable JWT_SECRET if it exists, otherwise uses the random string
+    secret: ${JWT_SECRET:4f6b92a3c8e5d1f0b7a4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2}
+    access-token-expiry: 86400000   # 24 Hours (in milliseconds)
+    refresh-token-expiry: 604800000 # 7 Days (in milliseconds)  

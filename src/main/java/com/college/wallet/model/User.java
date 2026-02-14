@@ -1,7 +1,8 @@
 package com.college.wallet.model;
 import java.time.LocalDateTime;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Email;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,6 +11,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,6 +33,11 @@ public class User {
 @Column(unique=true,nullable=false)
 @Email(message="Enter valid fromat email")
     private  String email;
+    @JsonProperty(access=JsonProperty.Access.WRITE_ONLY)
+    @NotBlank(message="Enter password")
+    @Column(nullable=false)
+    private  String password;
+    private String refreshToken;
     @Column(updatable=false)
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
