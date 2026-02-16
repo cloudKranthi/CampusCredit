@@ -5,20 +5,33 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.college.wallet.model.User;
+import com.college.wallet.repository.UserRepository;
+
+import ch.qos.logback.core.subst.Token;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys; // Corrected Import
+import jakarta.security.auth.message.callback.PrivateKeyCallback;
 
 @Service
 public class JwtService{
+
+    private final UserRepository userRepository;
     @Value("${app.jwt.secret}")
     private String SecretKey;
     @Value("${app.jwt.access-token-expiry}")
     private long  atexpiry;
     @Value("${app.jwt.refresh-token-expiry}")
     private long rtexpiry;
+
+    JwtService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
     public Map<String,String> tokens(UUID userId){
         String at=Jwts.builder()
                   .setSubject(userId.toString()).setIssuedAt(new Date())
@@ -29,5 +42,18 @@ public class JwtService{
         .setExpiration(new Date(System.currentTimeMillis()+rtexpiry)).signWith(Keys.hmacShaKeyFor(SecretKey.getBytes()),SignatureAlgorithm.HS256).compact();
        return  Map.of("accessToken",at,"refreshToken",rt);
     }
-
+ private String findUserId(String Token){
+ return extractClaim(Token,Claims::getSubject);
+ }
+ private  boolean checkToken(String Token, User user){
+    final String userIdfromToken=findUserId(Token);
+    boolean isEqual= userIdfromToken.equals(user.getId().toString());
+    boolean isNotExpired= !isExpired(Token);
+    return (isEqual && isNotExpired);
+  
+ }
+ public boolean isExpired(String token){
+    return extractClaim(token,Claims::getExpiration).before(new Date());
+ }
 }
+
