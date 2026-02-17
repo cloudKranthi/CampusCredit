@@ -3,6 +3,7 @@ package com.college.wallet.service;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+import io.jsonwebtoken.Claims;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -55,5 +56,6 @@ public class JwtService{
  public boolean isExpired(String token){
     return extractClaim(token,Claims::getExpiration).before(new Date());
  }
+
 }
 

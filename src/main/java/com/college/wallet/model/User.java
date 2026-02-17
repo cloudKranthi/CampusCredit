@@ -3,12 +3,15 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.college.wallet.Purse;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import  jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -38,6 +41,8 @@ public class User {
     @NotBlank(message="Enter password")
     @Column(nullable=false)
     private  String password;
+    @OneToOne(mappedBy="user",cascade=CascadeType.ALL)
+    private Purse purse;
     private String refreshToken;
     @Column(updatable=false)
     private LocalDateTime createdAt;
