@@ -41,7 +41,7 @@ public class User {
     @NotBlank(message="Enter password")
     @Column(nullable=false)
     private  String password;
-    @OneToOne(mappedBy="user",cascade=CascadeType.ALL)
+    @OneToOne(mappedBy="user",cascade=CascadeType.ALL,orphanRemoval=true)
     private Purse purse;
     private String refreshToken;
     @Column(updatable=false)
