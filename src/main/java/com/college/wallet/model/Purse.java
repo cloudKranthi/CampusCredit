@@ -9,10 +9,15 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+    @Getter
+     @Setter
 @Entity
+
 @Table(name="purses")
 public class  Purse{
-    
+
 @OneToOne(fetch=FetchType.LAZY)
 @JoinColumn(name= "user_id")
 private User user;
@@ -22,7 +27,6 @@ private String CardDetailsEncryString;
 @Enumerated(EnumType.STRING)
 @Column(nullable=false)
 private  WalletStatus status=WalletStatus.INCOMPLETE;
-
 
 
 }
