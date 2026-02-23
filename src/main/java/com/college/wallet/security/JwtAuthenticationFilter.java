@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -26,29 +27,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
 protected  void  doFilterInternal(@NonNull HttpServletRequest request,@NonNull HttpServletResponse response,@NonNull FilterChain filterChain)throws ServletException,IOException{
  String jwt=null;
- for(Cookie cookie:request.getCookies()){
+ Cookie Cookies[]= request.getCookies();
+ if(Cookies!=null){
+ for(Cookie cookie:Cookies){
     if(("accessToken").equals(cookie.getName())){
         jwt=cookie.getValue();
         break;
     }
  }
- if(jwt==null){
-    filterChain.doFilter(request, response);
-    return;
- }
+}
+ if(jwt!=null&&SecurityContextHolder.getContext().getAuthentication()==null){
   try {
       String userId=jwtService.findUserId(jwt);
-      User user=userRepositry.findById(Long.parseLong(userId)).orElse(null);
+      User user=userRepositry.findById(UUID.fromString(userId)).orElse(null);
       if(user!=null &&jwtService.checkToken(jwt,user)){
-        if(SecurityContextHolder.getContext().getAuthentication()==null){
+        
             UsernamePasswordAuthenticationToken authtoken= new UsernamePasswordAuthenticationToken(user,null,user.getAuthorities());
             authtoken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authtoken);
-        }
       }
   } catch (Exception e) {
     logger.error("Could not set User Authentication");
   }
+}
   filterChain.doFilter(request,response);
+
 }
 }
+

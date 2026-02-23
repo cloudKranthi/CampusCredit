@@ -21,12 +21,12 @@ public class WalletService {
     private  final UserRepository userRepository;
     private   final PurseRepository purseRepository;
     @Transactional//Atomic safety 
-    public  void transferMoney(String senderemail,String ReceiverUserEmail,BigDecimal Amount,String idempotencyKey){
+    public  void transferMoney(String senderPhonenumber,String ReceiverUserPhonenumber,BigDecimal Amount,String idempotencyKey){
          if(transactionRepositry.findByIdempotancyKey(idempotencyKey).isPresent()){return ;}//versioning
-           User senderUser=userRepository.getByEmail(senderemail);
-           User receiverUser=userRepository.getByEmail(ReceiverUserEmail);
-                Purse senderspurse=purseRepository.findById(senderUser.getId()).orElseThrow(()->new RuntimeException("no such sender user present"));
-                Purse receiverpurse=purseRepository.findById(receiverUser.getId()).orElseThrow(()-> new RuntimeException("no such receiver user is present"));
+           User senderUser=userRepository.findByPhonenumber(senderPhonenumber);
+           User receiverUser=userRepository.findByPhonenumber(ReceiverUserPhonenumber);
+                Purse senderspurse=purseRepository.findByUserPhonenumber(senderUser.getPhonenumber()).orElseThrow(()->new RuntimeException("no such sender user present"));
+                Purse receiverpurse=purseRepository.findByUserPhonenumber(receiverUser.getPhonenumber()).orElseThrow(()-> new RuntimeException("no such receiver user is present"));
                 if(("ACTIVE").equals(senderspurse.getStatus().toString())){
                       throw new RuntimeException("Account is not in Active");
                     

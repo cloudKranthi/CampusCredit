@@ -36,12 +36,12 @@ public class UserController{
         String hashedPassword=passwordEncoder.encode(user.getPassword());
         user.setPassword(hashedPassword);
         User savedUser=userRepository.save(user);
-        UserResponse userResponse= new UserResponse(savedUser.getId(),savedUser.getUsername(),savedUser.getEmail());
+        UserResponse userResponse= new UserResponse(savedUser.getId(),savedUser.getUsername(),savedUser.getEmail(),savedUser.getPhonenumber());
         return new ResponseEntity<> (userResponse,HttpStatus.CREATED);
     }
   @PostMapping("/login")
   public ResponseEntity<?> loginUser(@Valid @RequestBody User loginRequestUser){
-    User user= userRepository.getByEmail(loginRequestUser.getEmail());
+    User user= userRepository.findByPhonenumber(loginRequestUser.getPhonenumber());
     if(user==null){
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No such User found");
     }
@@ -51,7 +51,7 @@ public class UserController{
       String refreshToken = tokens.getOrDefault("refreshToken","");
       user.setRefreshToken(refreshToken);
       userRepository.save(user);
-              UserResponse userResponse= new UserResponse(user.getId(),user.getUsername(),user.getEmail());
+              UserResponse userResponse= new UserResponse(user.getId(),user.getUsername(),user.getEmail(),user.getPhonenumber());
             Map<String,Object> map=  Map.of("User Logged in succesfully",userResponse);
       ResponseCookie cookies= ResponseCookie.from("accessToken",Objects.requireNonNull(accessToken)).httpOnly(true).secure(false).path("/").sameSite("Strict").build();
       return ResponseEntity.ok().header("Set-Cookie",cookies.toString()).body(map);

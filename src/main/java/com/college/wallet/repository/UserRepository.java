@@ -6,8 +6,11 @@ import org.springframework.stereotype.Repository;
 
 import com.college.wallet.model.User;
 
+
+
 @Repository
 public interface  UserRepository extends JpaRepository<User,UUID>{
     User  getByEmail(String email);
     User  findUserById(UUID id);
+    User   findByPhonenumber(String phonenumber);
 }
