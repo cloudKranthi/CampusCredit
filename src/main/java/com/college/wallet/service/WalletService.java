@@ -2,9 +2,11 @@ package com.college.wallet.service;
 
 import java.math.BigDecimal;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.college.wallet.exception.BusinessException;
 import com.college.wallet.model.Purse;
 import com.college.wallet.model.Transaction;
 import com.college.wallet.model.TransactionStatus;
@@ -25,19 +27,19 @@ public class WalletService {
          if(transactionRepositry.findByIdempotancyKey(idempotencyKey).isPresent()){return ;}//versioning
            User senderUser=userRepository.findByPhonenumber(senderPhonenumber);
            User receiverUser=userRepository.findByPhonenumber(ReceiverUserPhonenumber);
-                Purse senderspurse=purseRepository.findByUserPhonenumber(senderUser.getPhonenumber()).orElseThrow(()->new RuntimeException("no such sender user present"));
-                Purse receiverpurse=purseRepository.findByUserPhonenumber(receiverUser.getPhonenumber()).orElseThrow(()-> new RuntimeException("no such receiver user is present"));
-                if(("ACTIVE").equals(senderspurse.getStatus().toString())){
-                      throw new RuntimeException("Account is not in Active");
+                Purse senderspurse=purseRepository.findByUserPhonenumber(senderUser.getPhonenumber()).orElseThrow(()->new BusinessException("no such sender user present",HttpStatus.NOT_FOUND));
+                Purse receiverpurse=purseRepository.findByUserPhonenumber(receiverUser.getPhonenumber()).orElseThrow(()-> new BusinessException("no such receiver user is present",HttpStatus.NOT_FOUND));
+                if("INACTIVE".equals(senderspurse.getStatus().name())){
+                      throw new BusinessException("Account is not in Active",HttpStatus.FORBIDDEN);
                     
                 }
                     
-                else if(("INACTIVE").equals(receiverpurse.getStatus().toString())){
-                    throw new RuntimeException("Account is not in Active");
+                else if(("INACTIVE").equals(receiverpurse.getStatus().name())){
+                    throw new BusinessException("Account is not in Active",HttpStatus.FORBIDDEN);
                       
                 }
                 else if(senderspurse.getBalance().compareTo(Amount)<0){
-                  throw new RuntimeException("Insufficient balance");
+                  throw new BusinessException("Insufficient balance",HttpStatus.BAD_REQUEST);
                 }
                 Transaction tx=new Transaction();
                 senderspurse.setBalance(senderspurse.getBalance().subtract(Amount));
@@ -50,9 +52,6 @@ public class WalletService {
                 purseRepository.save(senderspurse);
                 purseRepository.save(receiverpurse);
                 transactionRepositry.save(tx);
-
-           }
-
-         
+           } 
     }
 

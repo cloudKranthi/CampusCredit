@@ -43,7 +43,7 @@ public class User extends BaseEntity {
     @NotBlank(message="Enter password")
     @Column(nullable=false)
     private  String password;
-    @OneToOne(mappedBy="user",cascade=CascadeType.ALL,orphanRemoval=true)
+    @OneToOne(mappedBy="user")
     private Purse purse;
     private String refreshToken;
     @Enumerated(EnumType.STRING)

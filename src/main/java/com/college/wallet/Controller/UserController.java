@@ -16,6 +16,7 @@ import com.college.wallet.dto.UserResponse;
 import com.college.wallet.model.User;
 import com.college.wallet.repository.UserRepository;
 import com.college.wallet.service.JwtService;
+import com.college.wallet.service.UserService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class UserController{
     
     private final UserRepository userRepository;
+    private final UserService userService;
     
     private final BCryptPasswordEncoder passwordEncoder;
     
@@ -33,15 +35,15 @@ public class UserController{
         
     @PostMapping("/register")
     public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody User user){
-        String hashedPassword=passwordEncoder.encode(user.getPassword());
-        user.setPassword(hashedPassword);
-        User savedUser=userRepository.save(user);
+  
+        User savedUser=userService.RegisterUser(user);
         UserResponse userResponse= new UserResponse(savedUser.getId(),savedUser.getUsername(),savedUser.getEmail(),savedUser.getPhonenumber());
         return new ResponseEntity<> (userResponse,HttpStatus.CREATED);
     }
   @PostMapping("/login")
   public ResponseEntity<?> loginUser(@Valid @RequestBody User loginRequestUser){
-    User user= userRepository.findByPhonenumber(loginRequestUser.getPhonenumber());
+    String normalizedPhoneNumber=userService.NormalizePhoneNumber(loginRequestUser.getPhonenumber());
+    User user= userRepository.findByPhonenumber(normalizedPhoneNumber);
     if(user==null){
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No such User found");
     }

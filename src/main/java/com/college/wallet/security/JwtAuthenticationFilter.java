@@ -42,7 +42,7 @@ protected  void  doFilterInternal(@NonNull HttpServletRequest request,@NonNull H
       User user=userRepositry.findById(UUID.fromString(userId)).orElse(null);
       if(user!=null &&jwtService.checkToken(jwt,user)){
         
-            UsernamePasswordAuthenticationToken authtoken= new UsernamePasswordAuthenticationToken(user,null,user.getAuthorities());
+            UsernamePasswordAuthenticationToken authtoken= new UsernamePasswordAuthenticationToken(user.getPhonenumber(),null,user.getAuthorities());
             authtoken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authtoken);
       }
