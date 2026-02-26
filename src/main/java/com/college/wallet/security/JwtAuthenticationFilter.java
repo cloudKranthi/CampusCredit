@@ -1,23 +1,26 @@
 package com.college.wallet.security;
+import java.io.IOException;
+import java.util.List; // Use YOUR entity
+import java.util.UUID;
 
-import com.college.wallet.model.User; // Use YOUR entity
-import com.college.wallet.repository.UserRepository;
-import com.college.wallet.service.JwtService;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie; // ADDED: Missing import
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.lang.NonNull; // Standard Spring NonNull
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder; // ADDED: Missing import
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.UUID;
+import com.college.wallet.model.User; // Standard Spring NonNull
+import com.college.wallet.repository.UserRepository;
+import com.college.wallet.service.JwtService;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -41,8 +44,9 @@ protected  void  doFilterInternal(@NonNull HttpServletRequest request,@NonNull H
       String userId=jwtService.findUserId(jwt);
       User user=userRepositry.findById(UUID.fromString(userId)).orElse(null);
       if(user!=null &&jwtService.checkToken(jwt,user)){
-        
-            UsernamePasswordAuthenticationToken authtoken= new UsernamePasswordAuthenticationToken(user.getPhonenumber(),null,user.getAuthorities());
+        String roleFromName=user.getRole().name();
+        var authorities =List.of(new SimpleGrantedAuthority("ROLE_"+roleFromName));
+            UsernamePasswordAuthenticationToken authtoken= new UsernamePasswordAuthenticationToken(user.getPhonenumber(),null,authorities);
             authtoken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authtoken);
       }

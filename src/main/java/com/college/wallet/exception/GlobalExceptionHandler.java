@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> BusinessExceptionHandler(BusinessException ex,HttpServletRequest request){
         String RandomUUid= UUID.randomUUID().toString();
-      log.warn("OPERATIONAL ERROR[{}] Method[{}] URL[{}] Message[{}] Time[{}] ",RandomUUid,request.getMethod(),request.getRequestURL(),businessException.getMessage(),LocalDateTime.now());
+      log.warn("OPERATIONAL ERROR[{}] Method[{}] URL[{}] Message[{}] Time[{}] ",RandomUUid,request.getMethod(),request.getRequestURL(),ex.getMessage(),LocalDateTime.now());
         ErrorResponse er= new ErrorResponse(
             RandomUUid,"OPERATIONAL",request.getMethod(),request.getPathInfo(),ex.getMessage(),LocalDateTime.now(),null
         );

@@ -1,57 +1,41 @@
 package com.college.wallet.service;
-
 import java.math.BigDecimal;
+import java.time.Duration;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.college.wallet.exception.BusinessException;
-import com.college.wallet.model.Purse;
-import com.college.wallet.model.Transaction;
-import com.college.wallet.model.TransactionStatus;
-import com.college.wallet.model.User;
-import com.college.wallet.repository.PurseRepository;
-import com.college.wallet.repository.TransactionRepositry;
-import com.college.wallet.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+
 @RequiredArgsConstructor
 @Service
 public class WalletService {
-    private final TransactionRepositry transactionRepositry;
-    private  final UserRepository userRepository;
-    private   final PurseRepository purseRepository;
-    @Transactional//Atomic safety 
-    public  void transferMoney(String senderPhonenumber,String ReceiverUserPhonenumber,BigDecimal Amount,String idempotencyKey){
-         if(transactionRepositry.findByIdempotancyKey(idempotencyKey).isPresent()){return ;}//versioning
-           User senderUser=userRepository.findByPhonenumber(senderPhonenumber);
-           User receiverUser=userRepository.findByPhonenumber(ReceiverUserPhonenumber);
-                Purse senderspurse=purseRepository.findByUserPhonenumber(senderUser.getPhonenumber()).orElseThrow(()->new BusinessException("no such sender user present",HttpStatus.NOT_FOUND));
-                Purse receiverpurse=purseRepository.findByUserPhonenumber(receiverUser.getPhonenumber()).orElseThrow(()-> new BusinessException("no such receiver user is present",HttpStatus.NOT_FOUND));
-                if("INACTIVE".equals(senderspurse.getStatus().name())){
-                      throw new BusinessException("Account is not in Active",HttpStatus.FORBIDDEN);
-                    
-                }
-                    
-                else if(("INACTIVE").equals(receiverpurse.getStatus().name())){
-                    throw new BusinessException("Account is not in Active",HttpStatus.FORBIDDEN);
-                      
-                }
-                else if(senderspurse.getBalance().compareTo(Amount)<0){
-                  throw new BusinessException("Insufficient balance",HttpStatus.BAD_REQUEST);
-                }
-                Transaction tx=new Transaction();
-                senderspurse.setBalance(senderspurse.getBalance().subtract(Amount));
-                receiverpurse.setBalance(receiverpurse.getBalance().add(Amount));
-                tx.setIdempotencyKey(idempotencyKey);
-                tx.setSentBy(senderspurse);
-                tx.setReceivedBy(receiverpurse);
-                tx.setAmount(Amount);
-                tx.setStatus(TransactionStatus.COMPLETED);
-                purseRepository.save(senderspurse);
-                purseRepository.save(receiverpurse);
-                transactionRepositry.save(tx);
-           } 
-    }
 
+    private final RedisTemplate<String,Object> redisTemplate;
+    private final MoneyTransferService moneyTransferService;
+
+
+    public void checkToken(String token){
+      String setToken="set:Lock:"+token;
+    Boolean isNew =redisTemplate.opsForValue().setIfAbsent(setToken,"PROCCESSING",Duration.ofMinutes(5));
+    if(Boolean.FALSE.equals(isNew)){
+      throw new BusinessException("Duplicate request",HttpStatus.CONFLICT);
+    }
+    }
+//Atomic safety 
+    public  void transferMoney(String senderPhonenumber,String ReceiverUserPhonenumber,BigDecimal Amount,String idempotencyKey){
+         
+      try{
+        checkToken(idempotencyKey);
+         moneyTransferService.moneyTransfer(senderPhonenumber,ReceiverUserPhonenumber,Amount,idempotencyKey);
+        }
+      catch(Exception e){
+                  String token="set:Lock:"+idempotencyKey;
+                  redisTemplate.delete(token);
+                  throw new BusinessException("Transaction failed",HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
+}

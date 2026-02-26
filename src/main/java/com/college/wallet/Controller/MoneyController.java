@@ -3,12 +3,16 @@ import java.math.BigDecimal;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.college.wallet.service.PurseService;
 
 import lombok.RequiredArgsConstructor;
+
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/money")
@@ -22,4 +26,10 @@ public class MoneyController {
         }
         return ResponseEntity.status(HttpStatus.CREATED).body("Money added successfully");
     }
+    @PostMapping("/getBalance")
+    public ResponseEntity<?> getBalance(){
+        return ResponseEntity.ok(purseService.getPurseByUser().getBalance());
+    }
+    
 }
+
