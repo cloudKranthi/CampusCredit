@@ -19,7 +19,7 @@ public class UserService {
         private final PurseRepository purseRepository;
     @Transactional
     public User RegisterUser(User user){
-        user.setPhonenumber(NormalizePhoneNumber(user.getPhonenumber()));
+        user.setPhoneNumber(NormalizePhoneNumber(user.getPhoneNumber()));
         BigDecimal initialBalance = new BigDecimal("0.00");
          String hashedPassword=passwordEncoder.encode(user.getPassword());
         user.setPassword(hashedPassword);
@@ -37,6 +37,11 @@ public class UserService {
         if(phoneNumber.isEmpty())return null;
         String normalizedNumber=phoneNumber.replaceAll("[^0-9]","");
         return normalizedNumber.length()>10?normalizedNumber.substring(normalizedNumber.length()-10):normalizedNumber;
+    }
+    public void logoutUser(String phoneNumber){
+        User loggeduser=userRepository.findByPhoneNumber(phoneNumber).orElseThrow(()->new RuntimeException("User not found"));
+        loggeduser.setRefreshToken(null);
+        userRepository.save(loggeduser);
     }
 
 }

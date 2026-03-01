@@ -1,7 +1,6 @@
 package com.college.wallet.service;
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.util.UUID;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -10,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.college.wallet.exception.BusinessException;
 import com.college.wallet.model.Purse;
+import com.college.wallet.model.User;
 import com.college.wallet.repository.PurseRepository;
 import com.college.wallet.repository.UserRepository;
 
@@ -21,22 +21,19 @@ public class PurseService {
     private final UserRepository userRepository;
     private final RedisTemplate<String, Object> redisTemplate;
     public Purse getPurseByUser(){
-    UUID uuid=UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());
-    String phoneNumber=userRepository.findById(uuid).orElseThrow(()->new BusinessException("User not found", HttpStatus.NOT_FOUND)).getPhonenumber();
-    return purseRepository.findByUserPhonenumber(phoneNumber).orElseThrow(()->new BusinessException("Purse not found for user", HttpStatus.NOT_FOUND));
+    String phoneNumber=SecurityContextHolder.getContext().getAuthentication().getName();
+    User user=userRepository.findByPhoneNumber(phoneNumber).orElseThrow(()->new BusinessException("User not found", HttpStatus.NOT_FOUND));
+    return purseRepository.findByUser_PhoneNumber(phoneNumber).orElseThrow(()->new BusinessException("Purse not found for user", HttpStatus.NOT_FOUND));
     }
-    public String getPhoneNumber(){
-        UUID uuid=UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());
-        return userRepository.findById(uuid).orElseThrow(()->new BusinessException("User not found", HttpStatus.NOT_FOUND)).getPhonenumber();
-    }
+
     public boolean addMoney(BigDecimal amount){
         try{
-
+       String phoneNumber=SecurityContextHolder.getContext().getAuthentication().getName();
         Purse purse=getPurseByUser();
         purse.setBalance(purse.getBalance().add(amount));
         purseRepository.save(purse);
         try{
-         String cacheKey="balance:phoneNumber:"+getPhoneNumber();
+         String cacheKey="balance:phoneNumber:"+phoneNumber;
         redisTemplate.delete(cacheKey);
         }catch(Exception e){
             System.err.println("Error deleting cache: " + e.getMessage());
@@ -47,7 +44,7 @@ public class PurseService {
         }
     }
     public BigDecimal getBalance(){
-    String phoneNumber=getPhoneNumber();
+    String phoneNumber=SecurityContextHolder.getContext().getAuthentication().getName();
     String cacheKey="balance:phoneNumber:"+phoneNumber;
         try{
          Object cached=redisTemplate.opsForValue().get(cacheKey);
@@ -63,7 +60,7 @@ public class PurseService {
         }
     }
     public BigDecimal getBalanceFromDb(String phoneNumber,String cacheKey){
-         BigDecimal balance=purseRepository.findByUserPhonenumber(phoneNumber).orElseThrow(()->new BusinessException("Purse not found for user", HttpStatus.NOT_FOUND)).getBalance();
+         BigDecimal balance=purseRepository.findByUser_PhoneNumber(phoneNumber).orElseThrow(()->new BusinessException("Purse not found for user", HttpStatus.NOT_FOUND)).getBalance();
              try{
                 redisTemplate.opsForValue().set(cacheKey, balance, Duration.ofMinutes(10));
              }catch(Exception e){

@@ -6,13 +6,16 @@ import java.util.Objects;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.college.wallet.dto.UserResponse;
+import com.college.wallet.exception.BusinessException;
 import com.college.wallet.model.User;
 import com.college.wallet.repository.UserRepository;
 import com.college.wallet.service.JwtService;
@@ -37,23 +40,20 @@ public class UserController{
     public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody User user){
   
         User savedUser=userService.RegisterUser(user);
-        UserResponse userResponse= new UserResponse(savedUser.getId(),savedUser.getUsername(),savedUser.getEmail(),savedUser.getPhonenumber());
+        UserResponse userResponse= new UserResponse(savedUser.getId(),savedUser.getUsername(),savedUser.getEmail(),savedUser.getPhoneNumber());
         return new ResponseEntity<> (userResponse,HttpStatus.CREATED);
     }
   @PostMapping("/login")
   public ResponseEntity<?> loginUser(@Valid @RequestBody User loginRequestUser){
-    String normalizedPhoneNumber=userService.NormalizePhoneNumber(loginRequestUser.getPhonenumber());
-    User user= userRepository.findByPhonenumber(normalizedPhoneNumber);
-    if(user==null){
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No such User found");
-    }
+    String normalizedPhoneNumber=userService.NormalizePhoneNumber(loginRequestUser.getPhoneNumber());
+    User user= userRepository.findByPhoneNumber(normalizedPhoneNumber).orElseThrow(()->new BusinessException("No such User found",HttpStatus.NOT_FOUND));
     if(passwordEncoder.matches(loginRequestUser.getPassword(),user.getPassword())){
         Map<String,String> tokens= jwtService.tokens(user.getId());
       String accessToken = tokens.getOrDefault("accessToken","");
       String refreshToken = tokens.getOrDefault("refreshToken","");
       user.setRefreshToken(refreshToken);
       userRepository.save(user);
-              UserResponse userResponse= new UserResponse(user.getId(),user.getUsername(),user.getEmail(),user.getPhonenumber());
+              UserResponse userResponse= new UserResponse(user.getId(),user.getUsername(),user.getEmail(),user.getPhoneNumber());
             Map<String,Object> map=  Map.of("User Logged in succesfully",userResponse);
       ResponseCookie cookies= ResponseCookie.from("accessToken",Objects.requireNonNull(accessToken)).httpOnly(true).secure(false).path("/").sameSite("Strict").build();
       return ResponseEntity.ok().header("Set-Cookie",cookies.toString()).body(map);
@@ -62,6 +62,12 @@ public class UserController{
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid passowrd");
     }
   }    
-  
+  @GetMapping("/logout")
+  public ResponseEntity<?> logoutUser(){
+    String phoneNumber=SecurityContextHolder.getContext().getAuthentication().getName();
+    userService.logoutUser(phoneNumber);
+    ResponseCookie cookie=ResponseCookie.from("accessToken",null).httpOnly(true).secure(false).path("/").sameSite("Strict").build();
+    return ResponseEntity.ok().header("Set-Cookie",cookie.toString()).body(Map.of("message","Logged out successfully"));
+  }
 }
 

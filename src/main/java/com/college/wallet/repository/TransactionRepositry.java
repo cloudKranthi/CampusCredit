@@ -9,6 +9,6 @@ import org.springframework.stereotype.Repository;
 import com.college.wallet.model.Transaction;
 @Repository
 public interface TransactionRepositry extends  JpaRepository<Transaction, UUID>{
-    Optional<Transaction> findByIdempotancyKey(String idempotencyKey);
+    Optional<Transaction> findByIdempotencyKey(String idempotencyKey);
     //to prevent double click join
 }

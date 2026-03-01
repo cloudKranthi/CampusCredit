@@ -46,7 +46,7 @@ protected  void  doFilterInternal(@NonNull HttpServletRequest request,@NonNull H
       if(user!=null &&jwtService.checkToken(jwt,user)){
         String roleFromName=user.getRole().name();
         var authorities =List.of(new SimpleGrantedAuthority("ROLE_"+roleFromName));
-            UsernamePasswordAuthenticationToken authtoken= new UsernamePasswordAuthenticationToken(user.getPhonenumber(),null,authorities);
+            UsernamePasswordAuthenticationToken authtoken= new UsernamePasswordAuthenticationToken(user.getPhoneNumber(),null,authorities);
             authtoken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authtoken);
       }

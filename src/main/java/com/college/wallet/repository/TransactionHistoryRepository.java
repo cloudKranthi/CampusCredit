@@ -13,6 +13,9 @@ import com.college.wallet.model.Transaction;
 
 
 public interface TransactionHistoryRepository extends JpaRepository<Transaction,UUID> {
-    @Query("SELECT t FROM Transaction t WHERE t.sentBy.user.phoneNumber=:phoneNumber "+" OR "+" t.receivedBy.user.phoneNumber=:phoneNumber "+"ORDER BY t.createdAt "+" DESC ")
-    Page<Transaction> findByHistory(@Param("phoneNumber") String phoneNumber, Pageable pageable);
+@Query(value = "SELECT * FROM transactions", 
+           countQuery = "SELECT count(*) FROM transactions", 
+           nativeQuery = true)
+Page<Transaction> findByHistory(@Param("phoneNumber") String phoneNumber, Pageable pageable);
+
 }

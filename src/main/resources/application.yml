@@ -9,6 +9,13 @@ spring:
     show-sql:  true
     hibernate:
       ddl-auto:  update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      host: localhost
+      port: 6379
 app:
   jwt:
     # Uses the ENV variable JWT_SECRET if it exists, otherwise uses the random string
@@ -16,6 +23,3 @@ app:
     access-token-expiry: 86400000   # 24 Hours (in milliseconds)
     refresh-token-expiry: 604800000 # 7 Days (in milliseconds)  
 mode:  development
-management:
-  endpoint:
-    caches: lc1_4vlwYwjLEirJY5R8fgFoMCV6-tbqhHmRVN7UQmn94Cs3ljK25288N-EGHrpaHT8H20_qfpDRcuMhqtHF4XEMYdbtDs41zcf9JL4L7UvDUM55Nbsung4BoASRvsv2cj5WUNbEPWbeN9nsIxGDEQ==

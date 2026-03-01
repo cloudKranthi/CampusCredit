@@ -16,7 +16,7 @@ import lombok.Setter;
 @Entity
 
 @Table(name="purses")
-public class  Purse{
+public class  Purse extends BaseEntity{
 
 @OneToOne(fetch=FetchType.LAZY)
 @JoinColumn(name= "user_id")

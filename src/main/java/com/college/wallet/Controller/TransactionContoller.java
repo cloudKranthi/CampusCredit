@@ -1,41 +1,57 @@
 package com.college.wallet.Controller;
 
 import java.math.BigDecimal;
-import com.college.wallet.dto.TransactionHistorydto;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.data.domain.Page;
+
+import com.college.wallet.dto.MoneyTransferResponse;
+import com.college.wallet.service.TransactionHistoryService;
 import com.college.wallet.service.WalletService;
-import org.springframework.web.bind.annotation.*;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import com.college.wallet.service.TransactionHistoryService;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageRequest;
-import static org.springframework.data.domain.Sort.by;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/transactions")
 public class TransactionContoller {
-    private final WalletService walletService;
+
     private final TransactionHistoryService transactionHistoryService;
+     private final WalletService walletService;
     @PostMapping("/money-transfer")
-    public ResponseEntity<?> moneyTransfer(@Valid @RequestBody String senderemail,String receiveremail,BigDecimal Amount,WalletService walletService){
-        walletService.transferMoney(senderemail, receiveremail, Amount, receiveremail);
+    public ResponseEntity<?> moneyTransfer(@Valid @RequestBody MoneyTransferResponse request,@RequestHeader("idempotencyKey") String idempotencyKey){
+        String receiverPhoneNumber = request.receiverPhoneNumber();
+        String Amount = request.Amount();
+        Amount=Amount.replaceAll("[^\\d.]", "");// Remove non-numeric characters except decimal point
+       walletService.transferMoney( receiverPhoneNumber,new BigDecimal(Amount), idempotencyKey);
+        
+        
         return ResponseEntity.status(HttpStatus.CREATED).body("Transaction succesfull");
     }
-    @GetMapping("/history")
-    public ResponseEntity<Page<TransactionHistorydto>> getTransactionHistory(
+    @PostMapping("/history")
+    public ResponseEntity<?> getTransactionHistory(
         @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int limit,
-        @RequestParam String phoneNumber
+        @RequestParam(defaultValue = "10") int limit
     ) {
-        Pageable pageable = PageRequest.of(page, limit,Sort.by("createdAt").descending());
-        Page<TransactionHistorydto> history = transactionHistoryService.getTransactionHistory(phoneNumber, pageable);
-        return ResponseEntity.ok(history);
+        String phoneNumber=SecurityContextHolder.getContext().getAuthentication().getName();
+        //created pageable object
+        Pageable pageable = PageRequest.of(page, limit,Sort.by("created_at").descending());
+       var history=transactionHistoryService.getTransactionHistory(phoneNumber, pageable);
+       var historyList=history.getContent();
+       if(!historyList.isEmpty()){
+        return ResponseEntity.ok(historyList);
+       }
+       return ResponseEntity.ok("No transaction history found");
     }
 }
+

@@ -32,7 +32,7 @@ public class User extends BaseEntity {
 @Email(message="Enter valid fromat email")
     private  String email;
     @Column(unique=true,nullable = false)
-    private String Phonenumber;
+    private String phoneNumber;
     @JsonProperty(access=JsonProperty.Access.WRITE_ONLY)
     @NotBlank(message="Enter password")
     @Column(nullable=false)
@@ -45,4 +45,5 @@ public class User extends BaseEntity {
 
 }
 
+                                                          
 

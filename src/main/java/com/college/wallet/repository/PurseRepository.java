@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 import com.college.wallet.model.Purse;
 @Repository
 public interface PurseRepository extends JpaRepository<Purse,UUID> {
-    Optional<Purse> findByUserPhonenumber(String Phonenumber);
+    Optional<Purse> findByUser_PhoneNumber(String phoneNumber);
 }
