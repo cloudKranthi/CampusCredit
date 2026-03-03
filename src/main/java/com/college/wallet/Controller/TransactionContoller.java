@@ -19,6 +19,7 @@ import com.college.wallet.dto.MoneyTransferResponse;
 import com.college.wallet.service.TransactionHistoryService;
 import com.college.wallet.service.WalletService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 @RestController
@@ -29,11 +30,12 @@ public class TransactionContoller {
     private final TransactionHistoryService transactionHistoryService;
      private final WalletService walletService;
     @PostMapping("/money-transfer")
-    public ResponseEntity<?> moneyTransfer(@Valid @RequestBody MoneyTransferResponse request,@RequestHeader("idempotencyKey") String idempotencyKey){
+    public ResponseEntity<?> moneyTransfer(@Valid @RequestBody MoneyTransferResponse request,@RequestHeader("idempotencyKey") String idempotencyKey,HttpServletRequest httpServletRequest){
         String receiverPhoneNumber = request.receiverPhoneNumber();
         String Amount = request.Amount();
-        Amount=Amount.replaceAll("[^\\d.]", "");// Remove non-numeric characters except decimal point
-       walletService.transferMoney( receiverPhoneNumber,new BigDecimal(Amount), idempotencyKey);
+        Amount=Amount.replaceAll("[^\\d.]", "");
+        String clientIp=httpServletRequest.getRemoteAddr();
+       walletService.transferMoney( receiverPhoneNumber,new BigDecimal(Amount), idempotencyKey,clientIp);
         
         
         return ResponseEntity.status(HttpStatus.CREATED).body("Transaction succesfull");
@@ -42,8 +44,10 @@ public class TransactionContoller {
     public ResponseEntity<?> getTransactionHistory(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int limit
+        
     ) {
         String phoneNumber=SecurityContextHolder.getContext().getAuthentication().getName();
+    
         //created pageable object
         Pageable pageable = PageRequest.of(page, limit,Sort.by("created_at").descending());
        var history=transactionHistoryService.getTransactionHistory(phoneNumber, pageable);

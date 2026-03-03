@@ -24,9 +24,10 @@ public class MoneyTransferService {
     private  final UserRepository userRepository;
     private   final PurseRepository purseRepository;
     private final RedisTemplate<String,Object> redisTemplate;
+    private final AuditService auditService;
     private final TransactionHistoryService transactionHistoryService;
     @Transactional
-             public void moneyTransfer(String senderPhonenumber,String ReceiverUserPhonenumber,BigDecimal Amount,String idempotencyKey){
+             public void moneyTransfer(String senderPhonenumber,String ReceiverUserPhonenumber,BigDecimal Amount,String idempotencyKey,String clientIp){
           
 
 
@@ -70,6 +71,7 @@ public class MoneyTransferService {
                 transactionRepositry.saveAndFlush(tx);
                 System.out.println("✅ Transaction Saved! ID: " + tx.getId());
 System.out.println("✅ Records in DB count: " + transactionRepositry.count());
+      auditService.logAudit(senderPhonenumber,"MoneyTransfer","Success","Transfered "+Amount+" to "+ReceiverUserPhonenumber,clientIp);             
                 try{
                     String senderCacheKey="balance:phoneNumber:"+senderUser.getPhoneNumber();
                     String receiverCacheKey="balance:phoneNumber:"+receiverUser.getPhoneNumber();

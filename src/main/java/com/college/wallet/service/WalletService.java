@@ -41,7 +41,7 @@ public class WalletService {
     }
     }
 //Atomic safety 
-    public void transferMoney(String ReceiverUserPhonenumber,BigDecimal Amount,String idempotencyKey){
+    public void transferMoney(String ReceiverUserPhonenumber,BigDecimal Amount,String idempotencyKey,String clientIp){
          String senderPhonenumber=(SecurityContextHolder.getContext().getAuthentication().getName());
          if(senderPhonenumber==null || senderPhonenumber.isEmpty()){
           throw new BusinessException("Unauthorized",HttpStatus.UNAUTHORIZED);
@@ -55,7 +55,7 @@ public class WalletService {
       try{
         validateInjection();
         checkToken(idempotencyKey);
-         moneyTransferService.moneyTransfer(senderPhonenumber,ReceiverUserPhonenumber,Amount,idempotencyKey);
+         moneyTransferService.moneyTransfer(senderPhonenumber,ReceiverUserPhonenumber,Amount,idempotencyKey,clientIp);
         
         }
       catch(Exception e){
