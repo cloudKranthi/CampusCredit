@@ -21,6 +21,10 @@ public BCryptPasswordEncoder passwordencoder(){
     return new  BCryptPasswordEncoder();
 }
 @Bean
+public BCryptPasswordEncoder bcryptPinEncoder(){
+  return new BCryptPasswordEncoder();
+}
+@Bean
 public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
   http
 .csrf(csrf->csrf.disable())

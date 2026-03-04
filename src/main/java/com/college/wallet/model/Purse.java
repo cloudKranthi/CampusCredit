@@ -9,8 +9,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.Getter;
 import jakarta.validation.constraints.Min;
+import lombok.Getter;
 import lombok.Setter;
     @Getter
      @Setter
@@ -29,6 +29,8 @@ private String CardDetailsEncryString;
 @Enumerated(EnumType.STRING)
 @Column(nullable=false)
 private  WalletStatus status=WalletStatus.INCOMPLETE;
+@Column(name="transaction_pin",length=60,nullable=false)
+private String transactionPin;
 
 
 }
