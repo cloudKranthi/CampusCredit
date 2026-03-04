@@ -37,9 +37,9 @@ public class UserController{
     private final JwtService jwtService;
         
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody User user){
+    public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody User user,String TransactionPin){
   
-        User savedUser=userService.RegisterUser(user);
+        User savedUser=userService.RegisterUser(user,TransactionPin);
         UserResponse userResponse= new UserResponse(savedUser.getId(),savedUser.getUsername(),savedUser.getEmail(),savedUser.getPhoneNumber());
         return new ResponseEntity<> (userResponse,HttpStatus.CREATED);
     }

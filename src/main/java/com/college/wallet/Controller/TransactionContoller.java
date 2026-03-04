@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.college.wallet.dto.MoneyTransferResponse;
+import com.college.wallet.service.PurseService;
 import com.college.wallet.service.TransactionHistoryService;
 import com.college.wallet.service.WalletService;
 
@@ -29,10 +30,12 @@ public class TransactionContoller {
 
     private final TransactionHistoryService transactionHistoryService;
      private final WalletService walletService;
+     private final PurseService purseService;
     @PostMapping("/money-transfer")
-    public ResponseEntity<?> moneyTransfer(@Valid @RequestBody MoneyTransferResponse request,@RequestHeader("idempotencyKey") String idempotencyKey,HttpServletRequest httpServletRequest){
+    public ResponseEntity<?> moneyTransfer(@Valid @RequestBody MoneyTransferResponse request,@RequestHeader("idempotencyKey") String idempotencyKey,HttpServletRequest httpServletRequest,String pin){
         String receiverPhoneNumber = request.receiverPhoneNumber();
         String Amount = request.Amount();
+        purseService.pinTransactionCheck(receiverPhoneNumber, pin);
         Amount=Amount.replaceAll("[^\\d.]", "");
         String clientIp=httpServletRequest.getRemoteAddr();
        walletService.transferMoney( receiverPhoneNumber,new BigDecimal(Amount), idempotencyKey,clientIp);

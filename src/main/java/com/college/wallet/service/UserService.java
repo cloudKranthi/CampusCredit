@@ -18,15 +18,17 @@ public class UserService {
         private final UserRepository userRepository;
         private final PurseRepository purseRepository;
     @Transactional
-    public User RegisterUser(User user){
+    public User RegisterUser(User user,String TransactionPin){
         user.setPhoneNumber(NormalizePhoneNumber(user.getPhoneNumber()));
         BigDecimal initialBalance = new BigDecimal("0.00");
          String hashedPassword=passwordEncoder.encode(user.getPassword());
+         String hashedTransaction=passwordEncoder.encode(TransactionPin);
         user.setPassword(hashedPassword);
         User savedUser=userRepository.save(user);
         Purse purse = new Purse();
       purse.setBalance(initialBalance);
             purse.setUser(user);
+            purse.setTransactionPin(hashedTransaction);
 
       purseRepository.save(purse);
 
