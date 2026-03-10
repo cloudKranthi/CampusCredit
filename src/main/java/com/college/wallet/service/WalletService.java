@@ -14,16 +14,17 @@ import com.college.wallet.exception.BusinessException;
 import jakarta.annotation.PostConstruct;
 
 
-
 @Service
 public class WalletService {
-
+   private final TransactionHistoryService transactionHistoryService;
     private final  @Qualifier("redisTemplate")RedisTemplate<String,Object> redisTemplate;
     private final MoneyTransferService moneyTransferService;
+  
     @Autowired
-    public WalletService(RedisTemplate<String,Object> redisTemplate,MoneyTransferService moneyTransferService){
+    public WalletService(RedisTemplate<String,Object> redisTemplate,MoneyTransferService moneyTransferService,TransactionHistoryService transactionHistoryService){
       this.redisTemplate=redisTemplate;
       this.moneyTransferService=moneyTransferService;
+      this.transactionHistoryService=transactionHistoryService;
     }
     @PostConstruct
     public void validateInjection() {
@@ -41,22 +42,33 @@ public class WalletService {
     }
     }
 //Atomic safety 
-    public void transferMoney(String ReceiverUserPhonenumber,BigDecimal Amount,String idempotencyKey,String clientIp){
+    public void transferMoney(String ReceiverUserPhonenumber,BigDecimal Amount,String idempotencyKey,String clientIp,String pin){
          String senderPhonenumber=(SecurityContextHolder.getContext().getAuthentication().getName());
          if(senderPhonenumber==null || senderPhonenumber.isEmpty()){
           throw new BusinessException("Unauthorized",HttpStatus.UNAUTHORIZED);
          }
+         System.out.println("Receiver user phone number in wallet is  "+ReceiverUserPhonenumber);
          if(senderPhonenumber.equals(ReceiverUserPhonenumber)){
             throw new BusinessException("Sender and receiver phone numbers cannot be the same",HttpStatus.BAD_REQUEST);
          }
          if(Amount.compareTo(BigDecimal.ZERO) <= 0){
             throw new BusinessException("Amount must be greater than zero",HttpStatus.BAD_REQUEST);
          }
+         
       try{
         validateInjection();
         checkToken(idempotencyKey);
-         moneyTransferService.moneyTransfer(senderPhonenumber,ReceiverUserPhonenumber,Amount,idempotencyKey,clientIp);
-        
+         moneyTransferService.moneyTransfer(senderPhonenumber,ReceiverUserPhonenumber,Amount,idempotencyKey,clientIp,pin);
+           try{
+                    String senderCacheKey="balance:phoneNumber:"+senderPhonenumber;
+                    String receiverCacheKey="balance:phoneNumber:"+ReceiverUserPhonenumber;
+                    redisTemplate.delete(senderCacheKey);
+                    redisTemplate.delete(receiverCacheKey);
+                    transactionHistoryService.clearTransactionHistoryCache(senderPhonenumber);
+                    transactionHistoryService.clearTransactionHistoryCache(ReceiverUserPhonenumber);
+                }catch(Exception e){
+                    System.out.println("Error in caching redis");
+                }
         }
       catch(Exception e){
                         try{
@@ -74,4 +86,5 @@ public class WalletService {
     
       
     }
+    
 }

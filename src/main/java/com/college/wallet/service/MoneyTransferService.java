@@ -2,11 +2,14 @@ package com.college.wallet.service;
 
 import java.math.BigDecimal;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.college.wallet.dto.NotificationMessageResponse;
 import com.college.wallet.exception.BusinessException;
 import com.college.wallet.model.Purse;
 import com.college.wallet.model.Transaction;
@@ -23,14 +26,16 @@ public class MoneyTransferService {
         private final TransactionRepositry transactionRepositry;
     private  final UserRepository userRepository;
     private   final PurseRepository purseRepository;
+    private final PurseService purseService;
     private final RedisTemplate<String,Object> redisTemplate;
     private final AuditService auditService;
     private final TransactionHistoryService transactionHistoryService;
-    @Transactional
-             public void moneyTransfer(String senderPhonenumber,String ReceiverUserPhonenumber,BigDecimal Amount,String idempotencyKey,String clientIp){
-          
+    private final RabbitTemplate rabbitTemplate;
+    @Transactional(propagation=Propagation.REQUIRES_NEW,rollbackFor=Exception.class)
+             public void moneyTransfer(String senderPhonenumber,String ReceiverUserPhonenumber,BigDecimal Amount,String idempotencyKey,String clientIp,String pin){
+           purseService.pinTransactionCheck(senderPhonenumber,pin);
 
-
+           System.out.println("Receiver phone number in money Transfer service is  "+ReceiverUserPhonenumber);
          if(transactionRepositry.findByIdempotencyKey(idempotencyKey).isPresent()){throw new BusinessException("Transaction already exists",HttpStatus.CONFLICT);}//versioning
                 User senderUser=userRepository.findByPhoneNumber(senderPhonenumber).orElseThrow(() -> new BusinessException("Sender user not found", HttpStatus.NOT_FOUND));
     // Use the phone number for the receiver lookup
@@ -39,12 +44,12 @@ public class MoneyTransferService {
 
     // 3. FETCH ALL PURSES IMMEDIATELY AFTER
     // Use the actual phone numbers from the User objects to be 100% sure
-    Purse senderspurse = purseRepository.findByUser_PhoneNumber(senderUser.getPhoneNumber())
+    Purse senderspurse = purseRepository.findByUser(senderUser)
         .orElseThrow(() -> new BusinessException("Sender purse not found", HttpStatus.NOT_FOUND));
         
-    Purse receiverpurse = purseRepository.findByUser_PhoneNumber(receiverUser.getPhoneNumber())
+    Purse receiverpurse = purseRepository.findByUser(receiverUser)
         .orElseThrow(() -> new BusinessException("Receiver purse not found", HttpStatus.NOT_FOUND));
-            try{
+            
 
                 if("INACTIVE".equals(senderspurse.getStatus().name())){
                       throw new BusinessException("Account is not in Active",HttpStatus.FORBIDDEN);
@@ -66,25 +71,16 @@ public class MoneyTransferService {
                 tx.setReceivedBy(receiverpurse);
                 tx.setAmount(Amount);
                 tx.setStatus(TransactionStatus.COMPLETED);
-                purseRepository.saveAndFlush(senderspurse);
-                purseRepository.saveAndFlush(receiverpurse);
-                transactionRepositry.saveAndFlush(tx);
+                purseRepository.save(senderspurse);
+                purseRepository.save(receiverpurse);
+                transactionRepositry.save(tx);
+                NotificationMessageResponse msg=new NotificationMessageResponse(senderPhonenumber,ReceiverUserPhonenumber,Amount);
+                rabbitTemplate.convertAndSend("notificationExchange","routing.key",msg);
                 System.out.println("✅ Transaction Saved! ID: " + tx.getId());
 System.out.println("✅ Records in DB count: " + transactionRepositry.count());
       auditService.logAudit(senderPhonenumber,"MoneyTransfer","Success","Transfered "+Amount+" to "+ReceiverUserPhonenumber,clientIp);             
-                try{
-                    String senderCacheKey="balance:phoneNumber:"+senderUser.getPhoneNumber();
-                    String receiverCacheKey="balance:phoneNumber:"+receiverUser.getPhoneNumber();
-                    redisTemplate.delete(senderCacheKey);
-                    redisTemplate.delete(receiverCacheKey);
-                    transactionHistoryService.clearTransactionHistoryCache(senderUser.getPhoneNumber());
-                    transactionHistoryService.clearTransactionHistoryCache(receiverUser.getPhoneNumber());
-                }catch(Exception e){
-                    System.out.println("Error in caching redis");
-                }
-            }catch(Exception e){
-                throw new BusinessException(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
-            }
+                
+            
             }
               }
 

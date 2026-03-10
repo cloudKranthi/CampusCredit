@@ -1,6 +1,8 @@
 package com.college.wallet.service;
 import java.math.BigDecimal;
+import java.util.Map;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,7 @@ public class UserService {
         private final BCryptPasswordEncoder passwordEncoder;
         private final UserRepository userRepository;
         private final PurseRepository purseRepository;
+        private final JwtService jwtService;
     @Transactional
     public User RegisterUser(User user,String TransactionPin){
         user.setPhoneNumber(NormalizePhoneNumber(user.getPhoneNumber()));
@@ -44,6 +47,17 @@ public class UserService {
         User loggeduser=userRepository.findByPhoneNumber(phoneNumber).orElseThrow(()->new RuntimeException("User not found"));
         loggeduser.setRefreshToken(null);
         userRepository.save(loggeduser);
+    }
+    public void refreshTokenUser(){
+        String phoneNumber= SecurityContextHolder.getContext().getAuthentication().getName();
+        User user=userRepository.findByPhoneNumber(phoneNumber).orElseThrow(()->new RuntimeException("User not found"));
+        String refreshToken=user.getRefreshToken();
+        
+         Map<String,String> tokens= jwtService.tokens(user.getId());
+      String accessToken = tokens.getOrDefault("accessToken","");
+      String newrefreshToken = tokens.getOrDefault("refreshToken","");
+      user.setRefreshToken(refreshToken);
+      userRepository.save(user);
     }
 
 }

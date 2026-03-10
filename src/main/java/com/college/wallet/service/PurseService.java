@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.college.wallet.exception.BusinessException;
 import com.college.wallet.model.Purse;
@@ -26,9 +28,9 @@ public class PurseService {
     public Purse getPurseByUser(){
     String phoneNumber=SecurityContextHolder.getContext().getAuthentication().getName();
     User user=userRepository.findByPhoneNumber(phoneNumber).orElseThrow(()->new BusinessException("User not found", HttpStatus.NOT_FOUND));
-    return purseRepository.findByUser_PhoneNumber(phoneNumber).orElseThrow(()->new BusinessException("Purse not found for user", HttpStatus.NOT_FOUND));
+    return purseRepository.findByUser(user).orElseThrow(()->new BusinessException("Purse not found for user", HttpStatus.NOT_FOUND));
     }
-
+    @Transactional
     public boolean addMoney(BigDecimal amount){
         try{
        String phoneNumber=SecurityContextHolder.getContext().getAuthentication().getName();
@@ -46,6 +48,7 @@ public class PurseService {
             return false;
         }
     }
+    @Transactional
     public BigDecimal getBalance(){
     String phoneNumber=SecurityContextHolder.getContext().getAuthentication().getName();
     String cacheKey="balance:phoneNumber:"+phoneNumber;
@@ -63,7 +66,8 @@ public class PurseService {
         }
     }
     public BigDecimal getBalanceFromDb(String phoneNumber,String cacheKey){
-         BigDecimal balance=purseRepository.findByUser_PhoneNumber(phoneNumber).orElseThrow(()->new BusinessException("Purse not found for user", HttpStatus.NOT_FOUND)).getBalance();
+          User user=userRepository.findByPhoneNumber(phoneNumber).orElseThrow(()->new BusinessException("No such User found", HttpStatus.NOT_FOUND));
+         BigDecimal balance=purseRepository.findByUser(user).orElseThrow(()->new BusinessException("Purse not found for user", HttpStatus.NOT_FOUND)).getBalance();
              try{
                 redisTemplate.opsForValue().set(cacheKey, balance, Duration.ofMinutes(10));
              }catch(Exception e){
@@ -72,8 +76,11 @@ public class PurseService {
              }
              return balance;
     }
+    @Transactional(propagation=Propagation.REQUIRED)
     public void pinTransactionCheck(String phoneNumber,String pin){
-        Purse purse=purseRepository.findByUser_PhoneNumber(phoneNumber).orElseThrow(()->new BusinessException("No such purse exists for that phone number", HttpStatus.NOT_FOUND));
+        User user=userRepository.findByPhoneNumber(phoneNumber).orElseThrow(()->new BusinessException("No such user present", HttpStatus.NOT_FOUND));
+        Purse purse=purseRepository.findByUser(user).orElseThrow(()->new BusinessException("No such purse exists for that phone number", HttpStatus.NOT_FOUND));
+        System.out.println(purse);
         if(!passwordEncoder.matches(pin,purse.getTransactionPin())){
             throw new BusinessException("Invalid Transaction Pin",HttpStatus.UNAUTHORIZED);
         }
@@ -82,21 +89,26 @@ public class PurseService {
     
     public void setTransactionPin(String oldpin,String newpin){
      String phoneNumber=SecurityContextHolder.getContext().getAuthentication().getName();
-     Purse purse=purseRepository.findByUser_PhoneNumber(phoneNumber).orElseThrow(()->new BusinessException("No such Purse exists for this User",HttpStatus.NOT_FOUND));
+     User newuser=userRepository.findByPhoneNumber(phoneNumber).orElseThrow(()->new BusinessException("No such user present", HttpStatus.NOT_FOUND));
+     Purse purse=purseRepository.findByUser(newuser).orElseThrow(()->new BusinessException("No such Purse exists for this User",HttpStatus.NOT_FOUND));
      if(!passwordEncoder.matches(oldpin,purse.getTransactionPin())){
         throw new BusinessException("Invalid old Transaction Pin",HttpStatus.UNAUTHORIZED);
      }
       purse.setTransactionPin(passwordEncoder.encode(newpin));
        purseRepository.save(purse);
     }
+    @Transactional
     public void SaveNewPin(String phoneNumber,String pin){
         User u=userRepository.findByPhoneNumber(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(()->new BusinessException("No such User exists",HttpStatus.NOT_FOUND));
+
         if(u.getRole()!=Role.ADMIN){
           throw new BusinessException("User must be admin",HttpStatus.UNAUTHORIZED);
         }
-        Purse purse =purseRepository.findByUser_PhoneNumber(phoneNumber).orElseThrow(()->new BusinessException("No such User exists",HttpStatus.NOT_FOUND));
+        User n=userRepository.findByPhoneNumber(phoneNumber).orElseThrow(()->new BusinessException("No such user present", HttpStatus.NOT_FOUND));
+        Purse purse =purseRepository.findByUser(n).orElseThrow(()->new BusinessException("No such User exists",HttpStatus.NOT_FOUND));
         purse.setTransactionPin(passwordEncoder.encode(pin));
         purseRepository.save(purse);
 
     }
+    
 }

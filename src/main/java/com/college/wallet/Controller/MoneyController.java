@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.college.wallet.repository.PurseRepository;
+import com.college.wallet.repository.UserRepository;
 import com.college.wallet.service.PurseService;
 
 import lombok.RequiredArgsConstructor;
@@ -20,16 +22,22 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/money")
 public class MoneyController {
     private final PurseService purseService;
+    private final PurseRepository purseRepository;
+    private final UserRepository UserRepository;
     @PostMapping("/addmoney")
     public ResponseEntity<?> addMoney(@RequestBody Map<String,String> request){
         String amount = request.get("amount");
         amount=amount.replaceAll("[^\\d.]", "");// Remove non-numeric characters except decimal point
-        purseService.addMoney(new BigDecimal(amount));
-        return ResponseEntity.status(HttpStatus.CREATED).body("Money added successfully");
+        if(purseService.addMoney(new BigDecimal(amount))){
+        return ResponseEntity.status(HttpStatus.CREATED).body("Money added successfully");}
+        else{
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("money added  failed");
+        }
     }
     @GetMapping("/getBalance")
     public ResponseEntity<?> getBalance(){
-        return ResponseEntity.ok(purseService.getPurseByUser().getBalance());
+
+        return ResponseEntity.ok(purseService.getBalance());
     }
     
 }

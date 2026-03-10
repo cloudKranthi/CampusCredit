@@ -23,7 +23,7 @@ public class Transaction extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="sent_id",nullable=false)
     private Purse sentBy;
-    @ManyToOne(fetch=FetchType.LAZY)
+    @ManyToOne(fetch=FetchType.EAGER)
     @JoinColumn(name="receiver_id",nullable=false)
     private Purse receivedBy;
     @Enumerated(EnumType.STRING)

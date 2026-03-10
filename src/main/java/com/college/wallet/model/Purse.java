@@ -19,7 +19,7 @@ import lombok.Setter;
 @Table(name="purses")
 public class  Purse extends BaseEntity{
 
-@OneToOne(fetch=FetchType.LAZY)
+@OneToOne(fetch=FetchType.EAGER)
 @JoinColumn(name= "user_id")
 private User user;
 @Column(precision=19,scale=4)

@@ -12,7 +12,7 @@ public class pinChangeAdminResponse{
 @NotBlank
 
 private String  phonenumber;
-@NotBlank
+@NotBlank(message="pin should not be empty")
 @Size(min=6, max=6)
 private String pin;
 }

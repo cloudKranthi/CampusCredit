@@ -9,12 +9,14 @@ import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.stereotype.Repository;
 
 import com.college.wallet.model.Purse;
+import com.college.wallet.model.User;
 
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.QueryHint;
 @Repository
 public interface PurseRepository extends JpaRepository<Purse,UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+
     @QueryHints({@QueryHint(name="jakarta.persistence.lock.timeout",value="3000")})
-    Optional<Purse> findByUser_PhoneNumber(String phoneNumber);
+    Optional<Purse> findByUser(User user);
 }

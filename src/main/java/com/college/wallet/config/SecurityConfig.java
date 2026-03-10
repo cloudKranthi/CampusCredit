@@ -16,14 +16,14 @@ import lombok.RequiredArgsConstructor;
 @EnableWebSecurity
 public class SecurityConfig{
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final MDCFilter mdcFilter;
+  private final RateLimitFilter rateLimitFilter;
 @Bean
 public BCryptPasswordEncoder passwordencoder(){
     return new  BCryptPasswordEncoder();
 }
-@Bean
-public BCryptPasswordEncoder bcryptPinEncoder(){
-  return new BCryptPasswordEncoder();
-}
+
+
 @Bean
 public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
   http
@@ -32,7 +32,9 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
 .requestMatchers("/api/users/login","/api/users/register").permitAll()
 .requestMatchers("/user/").hasAnyRole("ADMIN","USER")
 .requestMatchers("/admin/").hasRole("ADMIN")
-.anyRequest().authenticated()).addFilterBefore(jwtAuthenticationFilter,UsernamePasswordAuthenticationFilter.class);
+.anyRequest().authenticated()).addFilterBefore(jwtAuthenticationFilter,UsernamePasswordAuthenticationFilter.class)
+.addFilterAfter(mdcFilter, UsernamePasswordAuthenticationFilter.class)
+.addFilterBefore(rateLimitFilter, JwtAuthenticationFilter.class);
 return http.build();
 }
 

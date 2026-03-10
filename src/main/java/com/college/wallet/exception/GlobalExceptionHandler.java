@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
-    @Value("${mode}")
+    @Value("${app.mode}")
     private String mode;
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> BusinessExceptionHandler(BusinessException ex,HttpServletRequest request){

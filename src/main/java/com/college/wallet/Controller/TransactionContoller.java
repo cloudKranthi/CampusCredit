@@ -32,13 +32,15 @@ public class TransactionContoller {
      private final WalletService walletService;
      private final PurseService purseService;
     @PostMapping("/money-transfer")
-    public ResponseEntity<?> moneyTransfer(@Valid @RequestBody MoneyTransferResponse request,@RequestHeader("idempotencyKey") String idempotencyKey,HttpServletRequest httpServletRequest,String pin){
+    public ResponseEntity<?> moneyTransfer(@Valid @RequestBody MoneyTransferResponse request,@RequestHeader("idempotencyKey") String idempotencyKey,HttpServletRequest httpServletRequest){
+        System.out.println("DEBUG: PIN received in Controller: " + request.pin());
+        System.out.println(" Receiver phone number is "+request.receiverPhoneNumber());
         String receiverPhoneNumber = request.receiverPhoneNumber();
         String Amount = request.Amount();
-        purseService.pinTransactionCheck(receiverPhoneNumber, pin);
+       String pin=request.pin();
         Amount=Amount.replaceAll("[^\\d.]", "");
         String clientIp=httpServletRequest.getRemoteAddr();
-       walletService.transferMoney( receiverPhoneNumber,new BigDecimal(Amount), idempotencyKey,clientIp);
+       walletService.transferMoney( receiverPhoneNumber,new BigDecimal(Amount), idempotencyKey,clientIp,pin);
         
         
         return ResponseEntity.status(HttpStatus.CREATED).body("Transaction succesfull");
