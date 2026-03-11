@@ -107,6 +107,41 @@ src/main/java/com/wallet
 ###  6)Cache Invalidation & Audit:
 - **Triggers an Audit Log for compliance.**
 
+## System Observability & Debugging
+
+To ensure the system is maintainable in a production environment, CampusCredit implements structured logging and request tracing:
+
+- **MDC (Mapped Diagnostic Context):** Every request is assigned a unique `traceId`. This ID is propagated across all logs (Controller -> Service -> Repository), allowing us to trace a specific transaction's journey through the logs.
+- **Global Exception Handling:** Uses a centralized `@ControllerAdvice` to catch and transform internal system errors into meaningful, secure API responses while masking sensitive stack traces.
+- **Structured Logging:** Logs are categorized by severity (`INFO`, `WARN`, `ERROR`). Transaction failures trigger detailed error logs including the User ID and Idempotency Key for rapid debugging.
+
+
+
+## 🚦 API Usage & Documentation
+
+The system follows RESTful principles with structured request/response bodies. 
+
+| Feature | Method | Endpoint | Description |
+| :--- | :--- | :--- | :--- |
+| **Purse** | `GET` | `/api/money/getBalance` | Fetch real-time balance (Redis-backed). |
+| **Transfer** | `POST` | `/api/transactions/money-transfer` | Execute atomic money transfer. |
+| **History** | `GET` | `/api/transactions/getHistory` | Paginated transaction history. |
+
+
+**Example Request Header:**
+- `X-Idempotency-Key`: `uuid-v4-string`
+- `Authorization`: `Bearer <JWT_TOKEN>`
+
+
+
+## 🏗️ Infrastructure & Deployment (Local)
+
+This project is built to be **Environment Agnostic** using Docker.
+
+1. **Spin up Services:**
+   ```bash
+   docker-compose up --build
+
 - **Cache Eviction: Deletes the old Redis cache keys for both users, forcing the system to fetch the updated balance from PostgreSQL on the next request.**
 
 - **Persistence: Updates the paginated Transaction History service for both parties.**
