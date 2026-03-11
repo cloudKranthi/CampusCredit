@@ -87,7 +87,7 @@ src/main/java/com/wallet
 - **Fail-Over Logic:** Manual rollback mechanisms and graceful degradation if Redis/RabbitMQ are unreachable.
 -  **Error Response Format:** each and every request has its own unique request id method from where it came timestamps seperation of fatal and operational error
      and show stack trace only in development.
--  **MDC :** it logs the thing with authenticated user phone number  during error response it shows with whiich phone numvebr it got error.
+-  **MDC :**  the filter chain runs after using getting authenticated it logs the thing with authenticated user phone number  during error response it shows with whiich phone numvebr it got error.
  ## End to End Transaction Logic
 
 **Every transfer follows a high-integrity execution pipeline to ensure zero data loss and prevent double-spending:**
