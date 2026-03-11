@@ -74,5 +74,16 @@ Technical Architecture & Design
 .Event-Driven Notifications: Transaction alerts for both senders and receivers are decoupled from the main execution thread.
 
 .Guaranteed Delivery: Messages are persisted in RabbitMQ queues. If a   notification service is temporarily down, the messages remain queued until they are successfully processed and delivered, ensuring no alert is ever lost.
+###  Technical Stack & Architecture
+- **Framework:** Spring Boot 3.x (Java 21)
+- **Database:** PostgreSQL (Primary Store with Row-Level Locking)
+- **Caching:** Redis (Idempotency Store & Session Management)
+- **Messaging:** RabbitMQ (Asynchronous Event-Driven Notifications)
+- **DevOps:** Docker Compose, GitHub Actions (CI/CD)
 
-Security & Resilience Flow
+###  System Resilience Features
+- **Pessimistic Locking:** Prevents "Double-Spending" via `SELECT FOR UPDATE`.
+- **Database Idempotency:** Custom filter ensures network retries don't create duplicate transactions.
+- **Fail-Over Logic:** Manual rollback mechanisms and graceful degradation if Redis/RabbitMQ are unreachable.
+
+
