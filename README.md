@@ -85,5 +85,30 @@ src/main/java/com/wallet
 - **Pessimistic Locking:** Prevents "Double-Spending" via `SELECT FOR UPDATE`.
 - **Database Idempotency:** Custom filter ensures network retries don't create duplicate transactions.
 - **Fail-Over Logic:** Manual rollback mechanisms and graceful degradation if Redis/RabbitMQ are unreachable.
+## End to End Transaction Logic
+
+**Every transfer follows a high-integrity execution pipeline to ensure zero data loss and prevent double-spending:
+### 1)Request Sanitization:
+- **Validates Transaction PIN and converts the String amount to BigDecimal.
+-  **Pre-check: Instantly rejects negative amounts or malformed inputs to save processing power.
+### 2)Idempotency Guard (Redis Layer):
+- **Intercepts the request using a unique Idempotency-Key.
+- **If the key exists in Redis, the system refuses the duplicate request, protecting against network retries or double-clicks.
+
+### 3) Atomic Execution (The Vault):
+- **Starts a @Transactional session with Propagation.REQUIRED.
+- **Uses Pessimistic Locking on the Sender and Receiver Purses to ensure thread-safety during high-concurrency "Money Updates."
+### 4) State Mutation & Validation:
+-  **Finds the purses, validates balances, and creates a Transaction entity marked as COMPLETED.
+- **Simultaneously deducts from the sender and credits the receiver within the database boundary.
+###  5)Asynchronous Notification (RabbitMQ):
+- **Offloads the notification payload to RabbitMQ via RabbitTemplate using a dedicated routing.key.
+- **This decouples the notification delay from the core financial transaction.
+###  6)Cache Invalidation & Audit:
+- **Triggers an Audit Log for compliance.
+
+- **Cache Eviction: Deletes the old Redis cache keys for both users, forcing the system to fetch the updated balance from PostgreSQL on the next request.
+
+- **Persistence: Updates the paginated Transaction History service for both parties.
 
 
