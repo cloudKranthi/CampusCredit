@@ -81,11 +81,14 @@ src/main/java/com/wallet
 - **Messaging:** RabbitMQ (Asynchronous Event-Driven Notifications)
 - **DevOps:** Docker Compose, GitHub Actions (CI/CD)
 
-##  System Resilience Features
+##  System Resilience And Error handling
 - **Pessimistic Locking:** Prevents "Double-Spending" via `SELECT FOR UPDATE`.
 - **Database Idempotency:** Custom filter ensures network retries don't create duplicate transactions.
 - **Fail-Over Logic:** Manual rollback mechanisms and graceful degradation if Redis/RabbitMQ are unreachable.
-## End to End Transaction Logic
+-  **Error Response Format:** each and every request has its own unique request id method from where it came timestamps seperation of fatal and operational error
+     and show stack trace only in development.
+-  **MDC :** it logs the thing with authenticated user phone number  during error response it shows with whiich phone numvebr it got error.
+ ## End to End Transaction Logic
 
 **Every transfer follows a high-integrity execution pipeline to ensure zero data loss and prevent double-spending:**
 ### 1)Request Sanitization:
@@ -117,7 +120,7 @@ To ensure the system is maintainable in a production environment, CampusCredit i
 
 
 
-## 🚦 API Usage & Documentation
+##  API Usage & Documentation
 
 The system follows RESTful principles with structured request/response bodies. 
 
@@ -134,7 +137,7 @@ The system follows RESTful principles with structured request/response bodies.
 
 
 
-## 🏗️ Infrastructure & Deployment (Local)
+##  Infrastructure & Deployment (Local)
 
 This project is built to be **Environment Agnostic** using Docker.
 
