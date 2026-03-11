@@ -47,9 +47,9 @@ src/main/java/com/wallet
 ├── exception/          # Global Exception Handling (@ControllerAdvice)
 └── repository/ # Postgres Data Access
 
-Technical Architecture & Design
+## Technical Architecture & Design
 
-## 1. User & Identity Management:
+### 1. User & Identity Management:
 
 - **Secure Persistence:** User passwords and transaction PINs are stored using strong cryptographic hashing.
 
@@ -57,7 +57,7 @@ Technical Architecture & Design
 
 - **Entity Relationship:** A strict 1:1 relationship is maintained between the User and their Purse, ensuring a single source of truth for every account.
 
-## 2. Financial Integrity (The Purse)
+### 2. Financial Integrity (The Purse)
 
 - **High-Precision Math:** All financial values use BigDecimal to prevent the rounding errors common with floating-point types.**
 
@@ -65,23 +65,23 @@ Technical Architecture & Design
 
 - **Atomic Initialization:** A Purse is automatically generated and linked during the User registration lifecycle.
 
-## 3. High-Performance Caching (Redis)
+### 3. High-Performance Caching (Redis)
 - **Latency Reduction:** Frequently accessed data, such as wallet balances and transaction statuses, are cached in Redis to offload heavy read operations from PostgreSQL.
 
 - **Resilience & Fallback:** The system features a Manual Rollback/Failover mechanism. If the Redis cluster is unreachable, the application gracefully fails over to the primary database to ensure 100% uptime.
 
-## 4. Asynchronous Messaging (RabbitMQ)
+### 4. Asynchronous Messaging (RabbitMQ)
 - **Event-Driven Notifications:** Transaction alerts for both senders and receivers are decoupled from the main execution thread.
 
 - **Guaranteed Delivery:** Messages are persisted in RabbitMQ queues. If a   notification service is temporarily down, the messages remain queued until they are successfully processed and delivered, ensuring no alert is ever lost.
-###  Technical Stack & Architecture
+##  Technical Stack & Architecture
 - **Framework:** Spring Boot 3.x (Java 21)
 - **Database:** PostgreSQL (Primary Store with Row-Level Locking)
 - **Caching:** Redis (Idempotency Store & Session Management)
 - **Messaging:** RabbitMQ (Asynchronous Event-Driven Notifications)
 - **DevOps:** Docker Compose, GitHub Actions (CI/CD)
 
-###  System Resilience Features
+##  System Resilience Features
 - **Pessimistic Locking:** Prevents "Double-Spending" via `SELECT FOR UPDATE`.
 - **Database Idempotency:** Custom filter ensures network retries don't create duplicate transactions.
 - **Fail-Over Logic:** Manual rollback mechanisms and graceful degradation if Redis/RabbitMQ are unreachable.
