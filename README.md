@@ -46,3 +46,31 @@ src/main/java/com/wallet
 ├── filters/            # JWT/Security interceptors
 ├── exception/          # Global Exception Handling (@ControllerAdvice)
 └── repository/ # Postgres Data Access
+
+Technical Architecture & Design
+
+1. User & Identity Management
+
+.Secure Persistence: User passwords and transaction PINs are stored using strong cryptographic hashing.
+
+.Role-Based Access Control (RBAC): Permissions are managed via Enum types to ensure strict access levels (e.g., Student, Merchant, Admin).
+
+.Entity Relationship: A strict 1:1 relationship is maintained between the User and their Purse, ensuring a single source of truth for every account.
+
+2. Financial Integrity (The Purse)
+
+.High-Precision Math: All financial values use BigDecimal to prevent the rounding errors common with floating-point types.
+
+.Negative Balance Protection: The system implements a Non-Negative Check at the database and application levels, ensuring a purse can never be overdrawn during a transaction.
+
+.Atomic Initialization: A Purse is automatically generated and linked during the User registration lifecycle.
+
+3. High-Performance Caching (Redis)
+.Latency Reduction: Frequently accessed data, such as wallet balances and transaction statuses, are cached in Redis to offload heavy read operations from PostgreSQL.
+
+.Resilience & Fallback: The system features a Manual Rollback/Failover mechanism. If the Redis cluster is unreachable, the application gracefully fails over to the primary database to ensure 100% uptime.
+
+4. Asynchronous Messaging (RabbitMQ)
+.Event-Driven Notifications: Transaction alerts for both senders and receivers are decoupled from the main execution thread.
+
+.Guaranteed Delivery: Messages are persisted in RabbitMQ queues. If a   notification service is temporarily down, the messages remain queued until they are successfully processed and delivered, ensuring no alert is ever lost.
