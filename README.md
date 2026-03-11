@@ -49,7 +49,7 @@ src/main/java/com/wallet
 
 Technical Architecture & Design
 
-1. User & Identity Management
+1. User & Identity Management:
 
 .Secure Persistence: User passwords and transaction PINs are stored using strong cryptographic hashing.
 
@@ -74,3 +74,5 @@ Technical Architecture & Design
 .Event-Driven Notifications: Transaction alerts for both senders and receivers are decoupled from the main execution thread.
 
 .Guaranteed Delivery: Messages are persisted in RabbitMQ queues. If a   notification service is temporarily down, the messages remain queued until they are successfully processed and delivered, ensuring no alert is ever lost.
+
+Security & Resilience Flow
