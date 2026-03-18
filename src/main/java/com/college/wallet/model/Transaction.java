@@ -28,7 +28,7 @@ public class Transaction extends BaseEntity {
     private Purse receivedBy;
     @Enumerated(EnumType.STRING)
     @Column(nullable=false)
-    private TransactionStatus status =TransactionStatus.PENDING;
+    private TransactionStatus status =TransactionStatus.NORMAL;
     @Column(nullable=false,precision=19,scale=4)
     private BigDecimal amount;
 

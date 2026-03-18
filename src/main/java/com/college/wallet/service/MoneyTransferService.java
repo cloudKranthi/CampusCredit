@@ -13,7 +13,6 @@ import com.college.wallet.dto.NotificationMessageResponse;
 import com.college.wallet.exception.BusinessException;
 import com.college.wallet.model.Purse;
 import com.college.wallet.model.Transaction;
-import com.college.wallet.model.TransactionStatus;
 import com.college.wallet.model.User;
 import com.college.wallet.repository.PurseRepository;
 import com.college.wallet.repository.TransactionRepositry;
@@ -70,7 +69,7 @@ public class MoneyTransferService {
                 tx.setSentBy(senderspurse);
                 tx.setReceivedBy(receiverpurse);
                 tx.setAmount(Amount);
-                tx.setStatus(TransactionStatus.COMPLETED);
+                
                 purseRepository.save(senderspurse);
                 purseRepository.save(receiverpurse);
                 transactionRepositry.save(tx);
