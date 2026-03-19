@@ -1,5 +1,8 @@
-const {dripQueue}=require('./queue');
-const app=require('express');
+
+import express from 'express';
+import { dripQueue } from './queue.js';
+const app=express();
+app.use(express.json());
 app.use("/api/adddrip/valut",
  async  function handlerequest(req,res){
   const{parentphoneNumber,studentphoneNumber,dailyLimit,balanceAmount}=req.body;
