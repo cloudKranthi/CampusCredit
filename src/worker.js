@@ -2,9 +2,19 @@ const {Worker}=require('bullmq');
 const {pool}=require('./db');
 
 const {dripQueue,connection}=require('./queue');
-const worker=new Worker("drip-queue",async(job)=>{
-    const{parentphoneNumber,studentphoneNumber,dailyLimit,balanceAmount}=job.data;
+const worker=new Worker("drip-payouts",async(job)=>{
+    const version = await client.query('SELECT version()');
+const dbName = await client.query('SELECT current_database()');
+console.log("🖥️ DATABASE VERSION:", version.rows[0].version);
+console.log("🌍 DATABASE NAME:", dbName.rows[0].current_database);
 
+const tableCheck = await client.query(`
+    SELECT count(*) FROM information_schema.tables 
+    WHERE table_schema = 'public'
+`);
+console.log("📊 TOTAL TABLES FOUND:", tableCheck.rows[0].count);
+    const{parentphoneNumber,studentphoneNumber,dailyLimit}=job.data;
+   const balanceAmount = job.data.balanceAmount || job.data.nextbalanceAmount;
    const client=await pool.connect();
    try{
     await client.query('BEGIN')
@@ -23,7 +33,7 @@ const worker=new Worker("drip-queue",async(job)=>{
         studentphoneNumber,
         dailyLimit,
         nextbalanceAmount
-    },{delay:24*60*60*1000});
+    },{delay:10*1000});
 }else{
     console.log("not sufficient amount is present in the account");
 }}

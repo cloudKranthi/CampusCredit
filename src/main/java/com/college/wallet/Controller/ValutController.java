@@ -22,6 +22,7 @@ public class ValutController {
         return ResponseEntity.status(HttpStatus.CREATED).body("redis initiated and succefully Transaction occured");
      }
      catch(Exception e){
+        System.out.println(e);
         return ResponseEntity.status(HttpStatus.CONFLICT).body("error catched while initating transaction");
      }
     }

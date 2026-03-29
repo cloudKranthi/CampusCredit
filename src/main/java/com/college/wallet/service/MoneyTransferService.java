@@ -77,7 +77,7 @@ public class MoneyTransferService {
                 rabbitTemplate.convertAndSend("notificationExchange","routing.key",msg);
                 System.out.println("✅ Transaction Saved! ID: " + tx.getId());
 System.out.println("✅ Records in DB count: " + transactionRepositry.count());
-      auditService.logAudit(senderPhonenumber,"MoneyTransfer","Success","Transfered "+Amount+" to "+ReceiverUserPhonenumber,clientIp);             
+               
                 
             
             }

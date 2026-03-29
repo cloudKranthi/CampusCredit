@@ -10,14 +10,13 @@ app.use("/api/adddrip/valut",
     parentphoneNumber,
     studentphoneNumber,
     dailyLimit,
-    remainingAmount:balanceAmount-dailyLimit
+    balanceAmount
   },{
-    delay:24*60*60*1000
+    delay:10*1000
   });
   console.log('Drip initiated in redis');
   res.send("Money sended succesfully")
 });
 app.listen(3000,()=>{
-  console.log('Node server lisetining')
+  console.log('Node server lisetining on 3000')
 });
-module.exports=handlerequest;

@@ -12,7 +12,7 @@ public class AuditEntity  extends BaseEntity{
     private String phoneNumber;
     private String action;
     private String status;
-    private String description;
+    private long duration;
     private String ip;
     private  String details;
 

@@ -15,9 +15,11 @@ import lombok.RequiredArgsConstructor;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig{
+  private final AuditFilter auditFilter;
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
   private final MDCFilter mdcFilter;
   private final RateLimitFilter rateLimitFilter;
+
 @Bean
 public BCryptPasswordEncoder passwordencoder(){
     return new  BCryptPasswordEncoder();
@@ -34,7 +36,8 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
 .requestMatchers("/admin/").hasRole("ADMIN")
 .anyRequest().authenticated()).addFilterBefore(jwtAuthenticationFilter,UsernamePasswordAuthenticationFilter.class)
 .addFilterAfter(mdcFilter, UsernamePasswordAuthenticationFilter.class)
-.addFilterBefore(rateLimitFilter, JwtAuthenticationFilter.class);
+.addFilterBefore(rateLimitFilter, JwtAuthenticationFilter.class)
+.addFilterAfter(auditFilter, UsernamePasswordAuthenticationFilter.class);
 return http.build();
 }
 

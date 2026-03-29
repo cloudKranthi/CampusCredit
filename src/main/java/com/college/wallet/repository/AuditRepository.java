@@ -1,7 +1,9 @@
 package com.college.wallet.repository;
 
-import java.util.Optional;
+import java.time.LocalDateTime;
+import org.springframework.data.domain.Pageable;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -10,5 +12,6 @@ import com.college.wallet.model.AuditEntity;
 
 @Repository
 public interface AuditRepository extends JpaRepository<AuditEntity,UUID> {
-    Optional<AuditEntity> findByPhoneNumber(String phoneNumber);
+    void deleteByCreatedAtBefore(LocalDateTime expiryTime);
+    Page<AuditEntity> findByPhoneNumber(String phoneNumber,Pageable pageable);
 }
